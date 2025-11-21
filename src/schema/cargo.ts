@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const CargoSchema = z.object({
+export const LNGCargoSchemaFlat = z.object({
   // Voyage/Shipment Details
   voyage_seller_name: z
     .string()
@@ -76,7 +76,7 @@ export const CargoSchema = z.object({
       "FX rate 1 USD = ? THB / อัตราแลกเปลี่ยน ดอลลาร์สหรัฐต่อบาทไทย (เช่น 1 USD = 32.4975 THB); ดึงเฉพาะตัวเลขฝั่ง THB ต่อ 1 USD"
     ),
 
-  // Customs/Import Services (allow page-level totals like 'รวมทั้งสิ้น')
+  // Customs/Import Services - ONLY final page totals marked with 'รวมทั้งสิ้น' or equivalent
   customs_clearance_services: z
     .array(
       z.object({
@@ -84,12 +84,12 @@ export const CargoSchema = z.object({
           .string()
           .optional()
           .describe(
-            "Service/Page label / รายละเอียดหรือหัวข้อหน้า เช่น 'Customs Clearance', 'Import Service', หรือสรุปหน้า 'รวมทั้งสิ้น'"
+            "ONLY the exact label for the final total line: 'รวมทั้งสิ้น' / 'Total' / 'Grand Total' / or similar final summary label found on the page"
           ),
         final_cost: z
           .number()
           .describe(
-            "Final cost per page or per bill / ยอดสุทธิของแต่ละหน้า/บิล (เช่น ค่า 'รวมทั้งสิ้น' ต่อหน้า); มักเป็น THB"
+            "The FINAL TOTAL amount shown at 'รวมทั้งสิ้น' or equivalent summary line; NOT individual line items or sub-totals"
           ),
         currency: z
           .string()
@@ -104,11 +104,11 @@ export const CargoSchema = z.object({
       })
     )
     .describe(
-      "Array of customs/import service charges; accept page-level totals (e.g., 'รวมทั้งสิ้น') when item details are not present / รายการค่าบริการพิธีการศุลกากร อนุญาตยอดสรุปต่อหน้า"
+      "Array of customs clearance FINAL TOTALS only (e.g., 'รวมทั้งสิ้น' lines). Do NOT include individual line items, breakdowns, or sub-amounts. Only extract the final aggregated total for each page or invoice section."
     ),
 });
 
-export type CargoSchema = z.infer<typeof CargoSchema>;
+export type LNGCargoFlat = z.infer<typeof LNGCargoSchemaFlat>;
 
 export const CARGO_SYSTEM_PROMPT = `You are a specialized data extraction assistant for LNG cargo shipping documents. Extract structured information into the provided schema. Documents may be in English, Thai, or mixed.
 
@@ -136,12 +136,24 @@ FIELD-SPECIFIC INSTRUCTIONS:
 
 - exchange_rate_usd_to_thb: Extract FX rate as the numeric THB per 1 USD (e.g., "32.4975" for "1 USD = 32.4975 THB"). If multiple rates exist, prefer the BOT announced selling rate on unloading/settlement date.
 
-CUSTOMS CLEARANCE SERVICES (ARRAY):
-- Extract customs/import service charges. If the document provides only page-level summaries or totals without itemized lines, capture each page's final total as one entry.
-- Accept labels such as "Customs Clearance", "Import Service", "ค่าพิธีการศุลกากร", or page summary keywords like "รวมทั้งสิ้น", "Total", "Grand Total".
-- final_cost must be the numeric final amount for that page or bill.
-- Include currency code when visible (e.g., THB).
-- If multiple pages have separate "รวมทั้งสิ้น" totals, include one array item per page.
+CUSTOMS CLEARANCE SERVICES (ARRAY) - CRITICAL RULES:
+⚠️ ONLY extract FINAL TOTAL lines (e.g., "รวมทั้งสิ้น", "Total", "Grand Total", "Net Total").
+⚠️ DO NOT extract individual line items, sub-amounts, or breakdowns (e.g., fees of 25000, 200, 3280, 1000).
+⚠️ Look for the FINAL AGGREGATED SUM that represents the complete cost for that section/page.
+⚠️ If a page shows: 25000 + 200 + 3280 + 1000 = 29480, ONLY extract 29480 (the final total).
+⚠️ The "description" field should contain ONLY the exact label of the final total line (e.g., "รวมทั้งสิ้น", "Total Amount", "Net Total").
+⚠️ Do NOT add explanatory text like "as per breakdown" or "page 1" in the description.
+⚠️ If multiple pages each have a "รวมทั้งสิ้น" line, include one array entry per page's final total.
+
+Examples of CORRECT customs_clearance_services extraction:
+✓ { "description": "รวมทั้งสิ้น", "final_cost": 29480, "currency": "THB" }
+✓ { "description": "Total", "final_cost": 29480, "currency": "THB" }
+✓ { "description": "Customs Clearance Service", "final_cost": 29480, "currency": "THB" } (if that's the section header above the final total)
+
+Examples of INCORRECT extraction (DO NOT DO THIS):
+✗ { "description": "Customs Clearance (as per breakdown on page 1)", "final_cost": 25000, "currency": "THB" }
+✗ { "description": "Service Fee", "final_cost": 200, "currency": "THB" }
+✗ Multiple entries for line items that sum to a total
 
 GENERAL:
 - Only extract values explicitly present in the document; do not guess.
@@ -153,5 +165,6 @@ QUALITY CHECKS (soft):
 - voyage_net_amount_usd ≈ voyage_quantity_mmbtu × voyage_price_usd_per_mmbtu (allow rounding).
 - quantity_net_delivered (MT) should not be confused with MMBTU; keep them separate.
 - exchange_rate_usd_to_thb should be THB per 1 USD.
+- customs_clearance_services array should have few entries (typically 1-3 final totals), NOT many line items.
 
 OUTPUT: Return only valid JSON conforming to the schema. Do not include explanations or markdown.`;

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ExtractPDFService } from "../src/extract-pdf.service";
 import { readFileAndSize } from "../src/helpers";
 import { Runtime } from "../src/runtime";
-import { CARGO_SYSTEM_PROMPT, CargoSchema } from "../src/schema/cargo";
+import { CARGO_SYSTEM_PROMPT, LNGCargoSchemaFlat } from "../src/schema/cargo";
 
 const files = {
   egat: path.join(__dirname, "Invoice_EGAT.pdf"),
@@ -78,7 +78,7 @@ describe("extract invoice", () => {
       svc: ExtractPDFService,
     }).pipe(
       Effect.andThen(({ svc }) =>
-        svc.processInline(file, CARGO_SYSTEM_PROMPT, CargoSchema)
+        svc.processInline(file, CARGO_SYSTEM_PROMPT, LNGCargoSchemaFlat)
       ),
       Effect.tap((data) => Effect.log("data", data)),
       Effect.tapError((error) => Effect.logError("error -->", error.error))
