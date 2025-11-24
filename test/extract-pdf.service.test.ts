@@ -1,7 +1,7 @@
 import path from "node:path";
 import { describe } from "vitest";
 
-const files = {
+const _files = {
   egat: path.join(__dirname, "Invoice_EGAT.pdf"),
   pelng: path.join(__dirname, "PELNG_EGAT.pdf"),
   cargo2: path.join(__dirname, "EGAT_Cargo2.pdf"),
