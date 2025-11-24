@@ -66,6 +66,45 @@ Example JSON structure:
 `;
 
 
+const ZawtikaSplitSchema = z.object({
+    moge_quantity_mmbtu: z.number().default(0).describe("MOGE's quantity of gas in MMBTU. Defaults to 0 if not found."),
+    moge_payment_usd: z.number().default(0).describe("MOGE's share of the payment in USD. Defaults to 0 if not found."),
+    pttepi_quantity_mmbtu: z.number().default(0).describe("PTTEPI's quantity of gas in MMBTU. Defaults to 0 if not found."),
+    pttepi_payment_usd: z.number().default(0).describe("PTTEPI's share of the payment in USD. Defaults to 0 if not found."),
+});
+export type ZawtikaSplit = z.infer<typeof ZawtikaSplitSchema>;
+const zawtikaSystemPrompt = `You are an expert data extraction model specializing in financial reports based on the Export Gas Sales Agreement. Your task is to extract four specific fields detailing the financial split between the two gas suppliers, MOGE and PTTEPI.
+
+1.  **Strictly adhere to the following Zod schema, which requires a single JSON object.**
+2.  **Output ONLY the raw JSON object.** Do not include any extra text, markdown formatting (e.g., \`\`\`json), or explanations.
+
+### Fields to Extract:
+* **moge_quantity_mmbtu**: MOGE's share of gas volume from the "Quantities MMBTU" column.
+* **moge_payment_usd**: MOGE's share of the payment from the "USD" column.
+* **pttepi_quantity_mmbtu**: PTTEPI's share of gas volume from the "Quantities MMBTU" column.
+* **pttepi_payment_usd**: PTTEPI's share of the payment from the "USD" column.
+
+### Data Location and Instructions:
+* **Source Location**: Find the table titled "**SPLIT BETWEEN THE SUPPLIERS**" (or similar heading). This table typically appears near the end of the monthly invoice summary.
+* **Extraction Logic**:
+    * Locate the row for **MOGE**. Extract the value from the **Quantities MMBTU** column for \`moge_quantity_mmbtu\` and the value from the **USD** column for \`moge_payment_usd\`.
+    * Locate the row for **PTTEPI**. Extract the value from the **Quantities MMBTU** column for \`pttepi_quantity_mmbtu\` and the value from the **USD** column for \`pttepi_payment_usd\`.
+* **Missing Data**: If any value is not found, you must return **0** (zero) for that specific field.
+* **Transformation**: All extracted values must be converted to a JavaScript number type (float/decimal), removing commas.
+
+### Output Format:
+Output a single JSON object structured as follows:
+
+Example JSON structure:
+{
+  "moge_quantity_mmbtu": 2610336.432, // Dynamically extracted, or 0
+  "moge_payment_usd": 25746270.29, // Dynamically extracted, or 0
+  "pttepi_quantity_mmbtu": 5309626.568, // Dynamically extracted, or 0
+  "pttepi_payment_usd": 52369908.77 // Dynamically extracted, or 0
+}
+`;
+
+
 export type Yadana = z.infer<typeof YadanaSchema>;
 
 export const pttSupplySchemaAndPrompt = {
@@ -76,5 +115,9 @@ export const pttSupplySchemaAndPrompt = {
     yetagun: {
         schema: YetagunSummarySchema,
         systemPrompt: yetagunSystemPrompt,
+    },
+    zawtika: {
+        schema: ZawtikaSplitSchema,
+        systemPrompt: zawtikaSystemPrompt,
     },
 };
