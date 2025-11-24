@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { Data, Effect } from "effect";
+import { Data, Duration, Effect } from "effect";
 import type { z } from "zod";
 import { ModelProvider } from "./model.provider";
 
@@ -36,8 +36,13 @@ export class ExtractPDFService extends Effect.Service<ExtractPDFService>()(
         schema: z.ZodType<T>
       ) =>
         Effect.tryPromise({
-          try: () =>
-            generateObject({
+          try: async () => {
+            const startTime = Date.now();
+            console.log(
+              `[ExtractPDF] Starting extraction. Size: ${pdfBuffer.length} bytes`
+            );
+
+            const result = await generateObject({
               model: models.gemini["2.5-flash"],
               system: systemPrompt,
               schema,
@@ -57,13 +62,28 @@ export class ExtractPDFService extends Effect.Service<ExtractPDFService>()(
                   ],
                 },
               ],
-            }),
+            });
+
+            const duration = Date.now() - startTime;
+            console.log(`[ExtractPDF] Completed in ${duration}ms`);
+            return result;
+          },
           catch: (error) =>
             new ExtractPdfError({
               error,
               message: "extract pdf in-line error",
             }),
-        }).pipe(Effect.andThen((res) => res.object));
+        }).pipe(
+          Effect.timeout(Duration.minutes(5)),
+          Effect.mapError((error) => {
+            if (error instanceof ExtractPdfError) return error;
+            return new ExtractPdfError({
+              error,
+              message: "Operation timed out after 5 minutes",
+            });
+          }),
+          Effect.andThen((res) => res.object)
+        );
 
       return {
         processInline,
