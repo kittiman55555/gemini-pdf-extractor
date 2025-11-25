@@ -1,0 +1,265 @@
+// zodSchema.ts
+import { z } from "zod";
+
+/**
+ * Zod Schema for a single gas sale item within an invoice.
+ */
+const InvoiceItemSchema = z.object({
+  /**
+   * Description of the gas sale item, e.g., 'Statement BEN/MAL/N.BEN/N.JAM/S.JAM/CHB (Normal)' or 'Normal price'.
+   */
+  description: z
+    .string()
+    .describe(
+      "Description of the gas sale item, e.g., 'Statement BEN/MAL/N.BEN/N.JAM/S.JAM/CHB (Normal)' or 'Normal price'."
+    ),
+  /**
+   * Quantity of gas sold for this item in MMBTU.
+   */
+  quantityMMBTU: z
+    .number()
+    .describe("Quantity of gas sold for this item in MMBTU."),
+  /**
+   * Unit price of gas per MMBTU in Thai Baht.
+   */
+  unitPriceTHB_MMBTU: z
+    .number()
+    .describe("Unit price of gas per MMBTU in Thai Baht."),
+  /**
+   * Amount for this line item in Thai Baht, excluding VAT.
+   */
+  amountThaiBaht: z
+    .number()
+    .describe("Amount for this line item in Thai Baht, excluding VAT."),
+});
+
+/**
+ * Zod Schema for optional bank details for payment.
+ */
+const BankDetailsSchema = z
+  .object({
+    /**
+     * Name of the bank for payment.
+     */
+    bankName: z.string().optional().describe("Name of the bank for payment."),
+    /**
+     * Bank account number for payment.
+     */
+    accountNumber: z
+      .string()
+      .optional()
+      .describe("Bank account number for payment."),
+    /**
+     * SWIFT code for the bank, if available.
+     */
+    swiftCode: z
+      .string()
+      .optional()
+      .describe("SWIFT code for the bank, if available."),
+  })
+  .optional()
+  .describe("Optional bank details for payment.");
+
+/**
+ * Zod Schema for a single natural gas sales invoice.
+ */
+const InvoiceSchema = z
+  .object({
+    /**
+     * Unique identifier for the invoice, e.g., '11-29/2025 L', 'PSL-002-08/25'.
+     */
+    invoiceNumber: z
+      .string()
+      .describe(
+        "Unique identifier for the invoice, e.g., '11-29/2025 L', 'PSL-002-08/25'."
+      ),
+    /**
+     * Date the invoice was issued, formatted as YYYY-MM-DD. For example, 'September 08, 2025' should be '2025-09-08'.
+     */
+    invoiceDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .describe(
+        "Date the invoice was issued, formatted as YYYY-MM-DD. For example, 'September 08, 2025' should be '2025-09-08'."
+      ),
+    /**
+     * Name of the gas supplier/vendor.
+     */
+    vendorName: z.string().describe("Name of the gas supplier/vendor."),
+    /**
+     * Taxpayer identification number of the vendor, if available.
+     */
+    vendorTaxId: z
+      .string()
+      .optional()
+      .describe("Taxpayer identification number of the vendor, if available."),
+    /**
+     * The buyer, which is always 'PTT Public Company Limited'.
+     */
+    buyerName: z
+      .literal("PTT Public Company Limited")
+      .describe("The buyer, which is always 'PTT Public Company Limited'."),
+    /**
+     * Taxpayer identification number of the buyer, if available.
+     */
+    buyerTaxId: z
+      .string()
+      .optional()
+      .describe(
+        "Taxpayer identification number of the buyer (PTT Public Company Limited), if available."
+      ),
+    /**
+     * The month and year for which the gas sales are being billed, e.g., 'August 2025'.
+     */
+    gasSalesMonth: z
+      .string()
+      .regex(/^\w{3,9} \d{4}$/)
+      .describe(
+        "The month and year for which the gas sales are being billed, e.g., 'August 2025'."
+      ),
+    /**
+     * List of individual gas sale items on the invoice.
+     */
+    items: z
+      .array(InvoiceItemSchema)
+      .min(1)
+      .describe("List of individual gas sale items on the invoice."),
+    /**
+     * Total amount for gas sales before Value Added Tax in Thai Baht.
+     */
+    subtotalAmountBeforeVAT: z
+      .number()
+      .describe(
+        "Total amount for gas sales before Value Added Tax in Thai Baht."
+      ),
+    /**
+     * Value Added Tax (VAT) amount in Thai Baht (usually 7%).
+     */
+    vatAmount: z
+      .number()
+      .describe("Value Added Tax (VAT) amount in Thai Baht (usually 7%)."),
+    /**
+     * Total amount due, including VAT, in Thai Baht.
+     */
+    totalAmountDue: z
+      .number()
+      .describe("Total amount due, including VAT, in Thai Baht."),
+    /**
+     * The currency of the invoice, which is always Thai Baht.
+     */
+    currency: z
+      .literal("THB")
+      .describe("The currency of the invoice, which is always Thai Baht."),
+    /**
+     * The date by which payment is due, formatted as YYYY-MM-DD. For example, 'September 30, 2025' should be '2025-09-30'.
+     */
+    paymentDueDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .describe("The date by which payment is due, formatted as YYYY-MM-DD."),
+    /**
+     * Optional bank details for payment.
+     */
+    bankDetails: BankDetailsSchema,
+  })
+  .describe("Schema for a single gas sales invoice.");
+
+/**
+ * Zod Schema for gas survey data from reports.
+ */
+const SurveyDataSchema = z
+  .object({
+    /**
+     * The month and year for which the gas survey data applies, e.g., 'August 2025'.
+     */
+    surveyMonth: z
+      .string()
+      .regex(/^\w{3,9} \d{4}$/)
+      .describe(
+        "The month and year for which the gas survey data applies, e.g., 'August 2025'."
+      ),
+    /**
+     * Source of the survey data, e.g., 'MEMORANDUM (หน้าที่ 11)', 'Gas Delivery Report for BENCHAMAS FIELD (หน้าที่ 14)'.
+     */
+    source: z
+      .string()
+      .describe(
+        "Source of the survey data, e.g., 'MEMORANDUM (หน้าที่ 11)', 'Gas Delivery Report for BENCHAMAS FIELD (หน้าที่ 14)'."
+      ),
+    /**
+     * Total gas volume in MMSCF from the survey report, if available.
+     */
+    totalGasVolumeMMSCF: z
+      .number()
+      .optional()
+      .describe(
+        "Total gas volume in MMSCF from the survey report, if available."
+      ),
+    /**
+     * Total energy in MMBTU from the survey report, usually labeled as 'ปริมาณความร้อน' or 'Energy'.
+     */
+    totalEnergyMMBTU: z
+      .number()
+      .describe(
+        "Total energy in MMBTU from the survey report, usually labeled as 'ปริมาณความร้อน' or 'Energy'."
+      ),
+  })
+  .describe("Schema for gas survey data.");
+
+/**
+ * Top-level Zod Schema for the complete extracted data, including multiple invoices and survey reports.
+ */
+export const PdfDataExtractorSchema = z
+  .object({
+    /**
+     * An array of extracted gas sales invoices.
+     */
+    invoices: z
+      .array(InvoiceSchema)
+      .min(1)
+      .describe("An array of extracted gas sales invoices."),
+    /**
+     * An array of extracted gas survey data reports.
+     */
+    surveyData: z
+      .array(SurveyDataSchema)
+      .min(1)
+      .describe("An array of extracted gas survey data reports."),
+  })
+  .describe(
+    "Extracted data from multiple gas sales invoices and associated survey reports for PTT Public Company Limited."
+  );
+
+// You can infer the TypeScript type from the Zod schema
+export type PdfDataExtractor = z.infer<typeof PdfDataExtractorSchema>;
+
+// systemPrompt.ts
+
+// systemPrompt.ts
+export const systemPrompt = `You are an expert data extraction bot designed to process PDF documents containing natural gas sales invoices and related survey reports for PTT Public Company Limited.
+Your task is to meticulously extract information and format it into a JSON object that strictly adheres to the provided Zod schema.
+
+**Instructions:**
+
+1.  **Extract ALL Invoices:** Go through the entire document and identify every distinct natural gas sales invoice. Each invoice should be accurately extracted and represented as a separate object within the \`invoices\` array. **The pages within the PDF may not always be in perfect sequential order for each individual document (invoice or report). Your primary goal is to identify and reconstruct complete logical documents (invoices and survey reports) regardless of their page arrangement.**
+2.  **Extract ALL Survey Data:** Identify all sections related to gas survey data. Specifically, look for total gas volume (MMSCF) and total energy (MMBTU), often labeled as "เบญจมาศ" (MMSCF), "ปริมาณความร้อน" (MMBTU), "Volume" (MMScf), or "Energy" (MMBtu). Extract each relevant survey data entry as an object within the \`surveyData\` array, ensuring to include its specific \`source\` (e.g., 'MEMORANDUM (หน้าที่ 11)', 'Gas Delivery Report for BENCHAMAS FIELD (หน้าที่ 14)').
+3.  **Strict Schema Adherence:** Your output **MUST** be a valid JSON object matching the provided Zod schema. Pay close attention to data types, required fields, and formatting. Any deviation will result in an error.
+4.  **Date Formatting:** All dates (e.g., \`invoiceDate\`, \`paymentDueDate\`) must be formatted as \`YYYY-MM-DD\`. For example, 'September 08, 2025' should be '2025-09-08'.
+5.  **Number Formatting:** All numerical fields (e.g., \`quantityMMBTU\`, \`unitPriceTHB_MMBTU\`, \`amountThaiBaht\`, \`subtotalAmountBeforeVAT\`, \`vatAmount\`, \`totalAmountDue\`, \`totalGasVolumeMMSCF\`, \`totalEnergyMMBTU\`) must be extracted as **numbers**, without commas, currency symbols, or units. Convert any extracted string numbers to proper numerical types.
+6.  **Specific Field Guidance:**
+    *   \`buyerName\`: This field should always be \`"PTT Public Company Limited"\`.
+    *   \`currency\`: This field should always be \`"THB"\`.
+    *   \`gasSalesMonth\`: Extract the month and year for which the gas sales apply (e.g., 'August 2025').
+    *   \`items\`: Carefully extract each individual line item describing a gas sale, including its \`description\`, \`quantityMMBTU\`, \`unitPriceTHB_MMBTU\`, and \`amountThaiBaht\`.
+    *   \`subtotalAmountBeforeVAT\`: This is the total amount for gas sales *before* VAT.
+    *   \`vatAmount\`: This is the Value Added Tax amount.
+    *   \`totalAmountDue\`: This is the grand total, including VAT.
+    *   \`bankDetails\`: Extract payment bank information if explicitly provided on the invoice (e.g., bank name, account number, SWIFT code).
+    *   \`surveyData.totalEnergyMMBTU\`: This is the "ปริมาณความร้อน" from the survey reports.
+7.  **Exclusions:** **DO NOT** extract any data from the "PTT Invoice Register" pages. Focus solely on the distinct gas sales invoices (like those from Chevron, Palang Sophon, PTTEP, Siam MOECO) and the separate gas survey reports (like MEMORANDUM and Gas Delivery Report).
+8.  **Accuracy:** Prioritize absolute accuracy for all extracted numerical values and textual descriptions. Ensure that calculated totals (subtotal, VAT, total due) match the invoice details.`;
+
+export const B8InvoiceAndHeatSchemaAndSystemPrompt = {
+  schema: PdfDataExtractorSchema,
+  prompt: systemPrompt,
+};

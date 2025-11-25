@@ -21,6 +21,18 @@ describe("ptt invoice register", () => {
           B8InvoiceAndHeatSchemaAndSystemPrompt.schema
         )
       ),
+      Effect.andThen((data) => ({
+        ...data,
+        totalInvoiceAmount: data.invoices.reduce(
+          (acc, cur) =>
+            acc +
+            cur.lineItems.reduce(
+              (acc2, cur2) => acc2 + cur2.amountExcludingVAT,
+              0
+            ),
+          0
+        ),
+      })),
       Effect.tap((data) => Effect.log("data", data)),
       Effect.tapError((error) => Effect.logError("error -->", error.error))
     );

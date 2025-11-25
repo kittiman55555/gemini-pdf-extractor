@@ -1,0 +1,146 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ptt invoice register > should extract ok 1`] = `
+{
+  "invoices": [
+    {
+      "invoiceNumber": "11-29/2025 L",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 10950311.99,
+          "quantityMMBTU": 46782.81,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 10950311.99,
+    },
+    {
+      "invoiceNumber": "11-29/2025 A",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+        {
+          "amountExcludingVAT": 123883323.06,
+          "quantityMMBTU": 529264.369,
+        },
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 123883323.06,
+    },
+    {
+      "invoiceNumber": "11-29/2025 B",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+        {
+          "amountExcludingVAT": 20879209.43,
+          "quantityMMBTU": 89201.85,
+        },
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 20879209.43,
+    },
+    {
+      "invoiceNumber": "11-29/2025 C",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 132234965.16,
+          "quantityMMBTU": 564944.931,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 132234965.16,
+    },
+    {
+      "invoiceNumber": "PSL-002-08/25",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+        {
+          "amountExcludingVAT": 8351683.77,
+          "quantityMMBTU": 35680.74,
+        },
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+        {
+          "amountExcludingVAT": 1368788.94,
+          "quantityMMBTU": 5847.851,
+        },
+        {
+          "amountExcludingVAT": 0,
+          "quantityMMBTU": 0,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 9720472.71,
+    },
+    {
+      "invoiceNumber": "9421100197",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 79970945.71,
+          "quantityMMBTU": 341658.353,
+        },
+        {
+          "amountExcludingVAT": 52264061.35,
+          "quantityMMBTU": 223286.757,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 132235007.06,
+    },
+    {
+      "invoiceNumber": "9661100175",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 4235493.86,
+          "quantityMMBTU": 18095.22,
+        },
+        {
+          "amountExcludingVAT": 353975.08,
+          "quantityMMBTU": 1512.281,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 4589468.94,
+    },
+    {
+      "invoiceNumber": "LG05-25008",
+      "lineItems": [
+        {
+          "amountExcludingVAT": 4562630.11,
+          "quantityMMBTU": 19492.838,
+        },
+      ],
+      "totalInvoiceAmountExcludingVAT": 4562630.11,
+    },
+  ],
+  "totalHeatQuantity": {
+    "confidence": 95,
+    "unit": "MMBTU",
+    "value": 1875768,
+  },
+  "totalInvoiceAmount": 439055388.46,
+}
+`;

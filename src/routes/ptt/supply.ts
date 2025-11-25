@@ -103,15 +103,16 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
                 B8InvoiceAndHeatSchemaAndSystemPrompt.schema
               )
               .pipe(
-                Effect.andThen((data) => ({
-                  ...data,
-                  totalInvoiceAmount: Number.parseFloat(
-                    Array.reduce(
-                      data.invoices,
-                      0,
-                      (acc, cur) => acc + cur.amountExcludingVAT
-                    ).toFixed(2)
-                  ),
+                Effect.let("svcData", (data) => data),
+                Effect.let("totalInvoiceAmount", ({ svcData }) => {
+                  const invoice = Array.flatMap(svcData.invoices, (inv) =>
+                    Array.map(inv.lineItems, (a) => a.amountExcludingVAT)
+                  );
+                  return Array.reduce(invoice, 0, (acc, cur) => acc + cur);
+                }),
+                Effect.andThen(({ svcData, totalInvoiceAmount }) => ({
+                  ...svcData,
+                  totalInvoiceAmount,
                 })),
                 Effect.orElseSucceed(() => null)
               );
@@ -368,13 +369,16 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
               B8InvoiceAndHeatSchemaAndSystemPrompt.schema
             )
           ),
-          Effect.andThen((data) => ({
-            ...data,
-            totalInvoiceAmount: Array.reduce(
-              data.invoices,
-              0,
-              (acc, cur) => acc + cur.amountExcludingVAT
-            ),
+          Effect.let("svcData", (data) => data),
+          Effect.let("totalInvoiceAmount", ({ svcData }) => {
+            const invoice = Array.flatMap(svcData.invoices, (inv) =>
+              Array.map(inv.lineItems, (a) => a.amountExcludingVAT)
+            );
+            return Array.reduce(invoice, 0, (acc, cur) => acc + cur);
+          }),
+          Effect.andThen(({ svcData, totalInvoiceAmount }) => ({
+            ...svcData,
+            totalInvoiceAmount,
           })),
           Effect.tap((data) => Effect.log("data", data)),
           Effect.tapError((error) => Effect.logError("error -->", error.error)),
