@@ -62,11 +62,27 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
           }
 
           if (documentType === "ptt_supply" && confidence > 90) {
-            return yield* svc.processInline(
-              buf,
-              pttSupplySchemaAndPrompt.invoice.systemPrompt,
-              pttSupplySchemaAndPrompt.invoice.schema
-            );
+            return yield* svc
+              .processInline(
+                buf,
+                pttSupplySchemaAndPrompt.invoice.systemPrompt,
+                pttSupplySchemaAndPrompt.invoice.schema
+              )
+              .pipe(
+                Effect.andThen((data) => ({
+                  ...data,
+                  totalInvoiceAmount: Array.reduce(
+                    data.invoices,
+                    0,
+                    (acc, cur) => acc + cur.amount_before_vat
+                  ),
+                  total_quantity: Array.reduce(
+                    data.invoices,
+                    0,
+                    (acc, cur) => acc + cur.quantity
+                  ),
+                }))
+              );
           }
 
           if (documentType === "b8_platform" && confidence > 90) {
@@ -76,7 +92,6 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
                 B8InvoiceAndHeatSchemaAndSystemPrompt.prompt,
                 B8InvoiceAndHeatSchemaAndSystemPrompt.schema
               )
-
               .pipe(
                 Effect.andThen((data) => ({
                   ...data,
