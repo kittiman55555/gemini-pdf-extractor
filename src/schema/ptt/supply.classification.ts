@@ -4,11 +4,12 @@ export const documentClassificationSchema = z.object({
   documentType: z
     .enum([
       "ptt_supply",
-      "b8_platform",
+      "b8_benchamas",
+      "pailin",
       "c5_g4",
       "arthit_statement",
-      "jda_a18", // JDA A-18 is now its own type
-      "jda_b17", // JDA B-17 is now its own type
+      "jda_a18",
+      "jda_b17",
       "yadana",
       "yetagun",
       "zawtika",
@@ -76,16 +77,28 @@ Key Features:
 
 Decision: Multiple platforms OR consolidated operator statement → PTT_SUPPLY
 
-## TYPE 2: B8_PLATFORM
-Multi-vendor service invoices for single platform.
+## TYPE 2: B8_BENCHAMAS
+Multi-vendor service invoices for single platform, specifically B8/32 or Benchamas.
 
 Key Features:
-- Single platform: B8/32, Benchamas, Pailin
+- Single platform: **B8/32 or Benchamas** (CRITICAL)
 - Multiple vendor companies
 - Thai terms: "ใบแจ้งหนี้", "ปริมาณความร้อน"
 - Service invoices (not gas supply)
 
-Decision: Multiple vendors for ONE platform → B8_PLATFORM
+Decision: "B8/32" OR "Benchamas" mentioned with multiple vendors → B8_BENCHAMAS
+
+## TYPE 2B: PAILIN
+Multi-vendor service invoices for the single Pailin platform.
+
+Key Features:
+- Single platform: **Pailin** (CRITICAL)
+- Multiple vendor companies
+- Thai terms: "ใบแจ้งหนี้", "ปริมาณความร้อน"
+- Service invoices (not gas supply)
+- Must NOT mention B8/32 or Benchamas
+
+Decision: "Pailin" mentioned with multiple vendors, and not B8/Benchamas → PAILIN
 
 ## TYPE 3: C5_G4
 Gas purchase documents for C5 and/or G4/48 fields, often in the format of a Chevron Statement of Account under the Restated GSPA.
@@ -93,7 +106,7 @@ Gas purchase documents for C5 and/or G4/48 fields, often in the format of a Chev
 Key Features:
 - Explicit "C5" or "G4/48" mention
 - "แหล่ง C5", "ค่าก๊าซฯแหล่ง C5"
-- **"STATEMENT OF ACCOUNT" for G4/48, associated with "Restated GSPA"**
+- "STATEMENT OF ACCOUNT" for G4/48, associated with "Restated GSPA"
 - Heat quantity section + invoice/accounting section
 - Vendors: Chevron, Mitsui
 - Currency: THB
@@ -207,9 +220,12 @@ Document doesn't match any pattern, poor quality, or not gas industry.
 4. Check C5/G4:
    - IF "C5" OR "G4/48" OR ("STATEMENT OF ACCOUNT" AND "G4/48") → C5_G4
 
-5. Check PTT Supply or B8:
+5. Check PTT Supply:
    - IF multiple platforms (G1, G2, G12) → PTT_SUPPLY
-   - IF single platform + multiple vendors → B8_PLATFORM
+
+6. Check B8/Pailin:
+   - IF "Pailin" and NOT ("B8/32" or "Benchamas") → PAILIN
+   - IF "B8/32" or "Benchamas" → B8_BENCHAMAS
 
 ---
 
@@ -217,14 +233,15 @@ Document doesn't match any pattern, poor quality, or not gas industry.
 
 | Type | Field Name | Key Identifier | Currency |
 |------|------------|----------------|----------|
+| B8_BENCHAMAS | B8/32, Benchamas | Multi-vendor invoice + heat data | THB |
+| PAILIN | Pailin | Multi-vendor invoice + heat data, distinct from B8/Benchamas | THB |
 | JDA_A18 | JDA A-18 | 'NET PAYMENT INSTRUCTIONS' + 'SHORTFALL GAS' | USD |
 | JDA_B17 | JDA B-17 | 'SCHEDULE 1: SUMMARY...' + 'SWAPPING' | USD |
 | YADANA | Yadana | "SPLIT BETWEEN THE SELLERS" | USD |
 | YETAGUN | Yetagun | "SUB-TOTAL (2.1-2.2+...)" | USD |
 | ZAWTIKA | Zawtika | "SPLIT BETWEEN THE SUPPLIERS" | USD |
 | ARTHIT_STATEMENT | Arthit | "Statement of Account" + multi-supplier | THB |
-| C5_G4 | C5, G4/48 | **Restated GSPA Statement of Account** | THB |
-| B8_PLATFORM | B8/32, Benchamas, Pailin | Multi-vendor table | THB |
+| C5_G4 | C5, G4/48 | Restated GSPA Statement of Account | THB |
 | PTT_SUPPLY | G1, G2, G12 | Operator's Statement | THB |
 
 ---

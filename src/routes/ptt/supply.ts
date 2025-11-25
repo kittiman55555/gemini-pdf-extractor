@@ -96,7 +96,7 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
               );
           }
 
-          if (documentType === "b8_platform" && confidence > 90) {
+          if (documentType === "b8_benchamas" && confidence > 90) {
             return yield* svc
               .processInline(
                 buf,
@@ -116,6 +116,47 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
                   totalInvoiceAmount: totalInvoiceAmount.toFixed(2),
                 })),
                 Effect.orElseSucceed(() => null)
+              );
+          }
+
+          if (documentType === "pailin" && confidence > 90) {
+            return yield* svc.processInline(
+              buf,
+              pailinSchemaAndPrompt.systemPrompt,
+              pailinSchemaAndPrompt.schema
+            )
+              .pipe(
+                Effect.andThen((data) => {
+                  const n = Array.flatMap(data.invoices, (d) =>
+                    Array.map(d.lineItems, (a) => a.amountExcludingVAT)
+                  );
+                  const totalInvoiceAmount = Array.reduce(
+                    n,
+                    0,
+                    (acc, cur) => acc + cur
+                  );
+
+                  return {
+                    ...data,
+                    totalInvoiceAmount: totalInvoiceAmount.toFixed(2),
+                  };
+                }),
+                Effect.tap((data) => Effect.log("data", data)),
+                Effect.tapError((error) => Effect.logError("error -->", error.error)),
+                Effect.catchTag("ExtractPDF/Process/Error", (error) =>
+                  Effect.succeed(
+                    Response.json(
+                      {
+                        message: error.message,
+                        error: error.error,
+                        status: "500",
+                      },
+                      {
+                        status: 500,
+                      }
+                    )
+                  )
+                )
               );
           }
 
