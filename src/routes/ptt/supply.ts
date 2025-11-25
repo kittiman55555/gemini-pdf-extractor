@@ -71,10 +71,12 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
               .pipe(
                 Effect.andThen((data) => ({
                   ...data,
-                  totalInvoiceAmount: Array.reduce(
-                    data.invoices,
-                    0,
-                    (acc, cur) => acc + cur.amount_before_vat
+                  totalInvoiceAmount: Number.parseFloat(
+                    Array.reduce(
+                      data.invoices,
+                      0,
+                      (acc, cur) => acc + cur.amount_before_vat
+                    ).toFixed(2)
                   ),
                   total_quantity: Array.reduce(
                     data.invoices,
@@ -95,10 +97,12 @@ export const supplyRoutes = new Elysia().group("/supply", (c) =>
               .pipe(
                 Effect.andThen((data) => ({
                   ...data,
-                  totalInvoiceAmount: Array.reduce(
-                    data.invoices,
-                    0,
-                    (acc, cur) => acc + cur.amountExcludingVAT
+                  totalInvoiceAmount: Number.parseFloat(
+                    Array.reduce(
+                      data.invoices,
+                      0,
+                      (acc, cur) => acc + cur.amountExcludingVAT
+                    ).toFixed(2)
                   ),
                 })),
                 Effect.orElseSucceed(() => null)
