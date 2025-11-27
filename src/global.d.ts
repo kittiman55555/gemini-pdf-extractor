@@ -6,6 +6,7 @@ import type { LogLevel } from "effect";
 type Env = {
   GOOGLE_GENERATIVE_AI_API_KEY: string;
   LOG_LEVEL: LogLevel.LogLevel["_tag"];
+  REDIS_URL: string;
 };
 
 declare global {
