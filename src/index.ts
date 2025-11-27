@@ -14,6 +14,8 @@ import { TSO_SYSTEM_PROMPT, TSOfileSchema } from "./schema/tso";
 
 const app = new Elysia();
 
+console.log(process.env);
+
 function debugEnv() {
   const program = Effect.Do.pipe(
     Effect.tap(() => Effect.logDebug("env", process.env))
