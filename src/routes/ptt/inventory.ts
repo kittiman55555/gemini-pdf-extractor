@@ -24,13 +24,18 @@ export const inventoryRoutes = new Elysia().group("/inventory", (c) =>
           expiresIn: Duration.seconds(query.cacheDuration)
         })),
         Effect.andThen(({ svc, cacheFn }) =>
-          cacheFn(
-            svc.processInline(
-              buf,
-              pttInventorySchemaAndPrompt.terminalCost.systemPrompt,
-              pttInventorySchemaAndPrompt.terminalCost.schema
-            )
+
+        {
+          const program = svc.processInline(
+            buf,
+            pttInventorySchemaAndPrompt.terminalCost.systemPrompt,
+            pttInventorySchemaAndPrompt.terminalCost.schema
           )
+          if (query.cache === "false") {
+            return program
+          }
+          return cacheFn(program)
+        }
         ),
         Runtime.runPromise
       );
